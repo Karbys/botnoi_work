@@ -277,6 +277,10 @@ if openai_api_key:
             # st.write("### Classify count True")
             # st.write(f"Total 'ResultClassify' True Count: {result_classify_true_count}")
 
+        with col2:
+            st.write("### 📊 Preview of Analysis Results")
+            st.dataframe(gpt_4o_mini)  # หรือใช้ st.table(gpt_4o_mini) ถ้าอยากได้แบบเรียบง่าย
+
             # ✅ **สร้างไฟล์ Excel และให้ดาวน์โหลด**
             output = BytesIO()
             with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
@@ -289,10 +293,6 @@ if openai_api_key:
                 file_name="analysis_results.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-
-        with col2:
-            st.write("### 📊 Preview of Analysis Results")
-            st.dataframe(gpt_4o_mini)  # หรือใช้ st.table(gpt_4o_mini) ถ้าอยากได้แบบเรียบง่าย
 else:
     st.info("Please enter your OpenAI API Key to proceed.")
 
