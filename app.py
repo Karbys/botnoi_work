@@ -204,6 +204,14 @@ if openai_api_key:
 
         arrays_length = [len(sentiment_exp), len(sentiment_val), len(IS_TRUE_exp), len(IS_TRUE_val), len(ADS_exp), len(ADS_val), len(classify_val)]
 
+        # st.write(len(sentiment_exp))
+        # st.write(len(sentiment_val))
+        # st.write(len(len(IS_TRUE_exp))
+        # st.write(len(len(IS_TRUE_val))
+        # st.write(len(ADS_exp))
+        # st.write(len(ADS_val))
+        # st.write(len(classify_val))
+
         # ถ้าไม่ครบให้แสดงข้อความแจ้งเตือน
         if len(set(arrays_length)) != 1:
             st.warning("Warning: Some arrays have different lengths. Please run the process again to ensure data consistency.")
@@ -235,7 +243,7 @@ if openai_api_key:
         #     else set(str(row["my_classify"]).split(", ")).issubset(set(str(row["classify_value"]).split(", "))),
         #     axis=1
         # )
-
+        
         col1, col2 = st.columns([1, 2])  # ฝั่งซ้าย (กว้าง), ฝั่งขวา (แคบ)
         with col1:
             # ✅ **แสดงจำนวน sentiment ทั้งหมด (positive, negative, neutral)**
