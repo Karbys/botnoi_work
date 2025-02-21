@@ -222,14 +222,14 @@ if openai_api_key:
             # "true_classify": col3,
             # "my_classify": my_classify
         })
-        gpt_4o_mini["Result"] = gpt_4o_mini["LLM"] == gpt_4o_mini["Answer"]
-        # gpt_4o_mini["ResultHuman"] = gpt_4o_mini["LLM"] == gpt_4o_mini["Human_Answer"]
-        # gpt_4o_mini["true_classify"] = gpt_4o_mini["true_classify"].replace("TRUE", "True")
-        gpt_4o_mini["ResultClassify"] = gpt_4o_mini.apply(
-            lambda row: True if row["true_classify"] == "True" and row["classify_value"] == "TRUE"
-            else set(str(row["true_classify"]).split(", ")).issubset(set(str(row["classify_value"]).split(", "))),
-            axis=1
-        )
+        # gpt_4o_mini["Result"] = gpt_4o_mini["LLM"] == gpt_4o_mini["Answer"]
+        # # gpt_4o_mini["ResultHuman"] = gpt_4o_mini["LLM"] == gpt_4o_mini["Human_Answer"]
+        # # gpt_4o_mini["true_classify"] = gpt_4o_mini["true_classify"].replace("TRUE", "True")
+        # gpt_4o_mini["ResultClassify"] = gpt_4o_mini.apply(
+        #     lambda row: True if row["true_classify"] == "True" and row["classify_value"] == "TRUE"
+        #     else set(str(row["true_classify"]).split(", ")).issubset(set(str(row["classify_value"]).split(", "))),
+        #     axis=1
+        # )
         # gpt_4o_mini["ResultClassify_2"] = gpt_4o_mini.apply(
         #     lambda row: True if row["my_classify"] == "True" and row["classify_value"] == "TRUE"
         #     else set(str(row["my_classify"]).split(", ")).issubset(set(str(row["classify_value"]).split(", "))),
@@ -242,8 +242,8 @@ if openai_api_key:
             st.write("### Sentiment Summary")
             # นับจำนวนประเภท sentiment ในคอลัมน์ "LLM"
             sentiment_counts = gpt_4o_mini["LLM"].value_counts()
-            result_true_count = gpt_4o_mini["Result"].sum()
-            result_classify_true_count = gpt_4o_mini["ResultClassify"].sum()
+            # result_true_count = gpt_4o_mini["Result"].sum()
+            # result_classify_true_count = gpt_4o_mini["ResultClassify"].sum()
 
             # แสดงจำนวนทั้งหมดและแยกเป็นประเภท
             st.write(f"Total Sentiments: {sentiment_counts.sum()}")
@@ -252,8 +252,8 @@ if openai_api_key:
             st.write(f"Neutral: {sentiment_counts.get('Neutral', 0)}")
 
             # แสดงผลใน Streamlit
-            st.write("### Sentiment count True")
-            st.write(f"Total 'Result' True Count: {result_true_count}")
+            # st.write("### Sentiment count True")
+            # st.write(f"Total 'Result' True Count: {result_true_count}")
 
             # ✅ **แสดงจำนวน classify_value ทั้งหมด**
             st.write("### Classify Summary")
@@ -266,8 +266,8 @@ if openai_api_key:
             for classify, count in classify_counts.items():
                 st.write(f"{classify}: {count}")
 
-            st.write("### Classify count True")
-            st.write(f"Total 'ResultClassify' True Count: {result_classify_true_count}")
+            # st.write("### Classify count True")
+            # st.write(f"Total 'ResultClassify' True Count: {result_classify_true_count}")
 
             # ✅ **สร้างไฟล์ Excel และให้ดาวน์โหลด**
             output = BytesIO()
