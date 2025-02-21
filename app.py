@@ -159,7 +159,7 @@ if openai_api_key:
 
         return output
 
-    batch_size = 20
+    batch_size = 10
     ql = []
     for i in range(0, len(msg), batch_size):
         info = msg[i:i+batch_size]
