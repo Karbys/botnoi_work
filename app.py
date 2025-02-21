@@ -209,7 +209,7 @@ if openai_api_key:
             st.warning("Warning: Some arrays have different lengths. Please run the process again to ensure data consistency.")
 
         gpt_4o_mini = pd.DataFrame({
-            "Message": col1,
+            "Message": msg,
             "LLM_Reason": sentiment_exp,
             "LLM": sentiment_val,
             # "Answer": col2,
