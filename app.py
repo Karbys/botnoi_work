@@ -288,7 +288,7 @@ if openai_api_key:
                     "Nan": classify_val.count("Nan"),
                     "True": classify_val.count("True"),
                     "True 5G": classify_val.count("True 5G"),
-                    "True Vision": classify_val.count("True Vision"),
+                    "True Visions": classify_val.count("True Visions"),
                     "True Visions NOW": classify_val.count("True Visions NOW"),
                     "True Online": classify_val.count("True Online"),
                     "True You": classify_val.count("True You"),
@@ -298,9 +298,9 @@ if openai_api_key:
                 }
                 total_classify = sum(classify_counts.values())
                 # แสดงจำนวน Classify
-                st.write(f"**TOTAL CLASSIFY: {total_classify}**")
                 for key, value in classify_counts.items():
                     st.write(f"{key}: {value}")
+                st.write(f"**TOTAL CLASSIFY: {total_classify}**")
 
             # ส่วนของคอลัมน์ขวา (col2)
             with col2:
