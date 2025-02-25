@@ -1,3 +1,12 @@
 อย่าลืมติดตั้ง
 
 pip install -r requirements.txt
+
+# สร้าง virtual environment
+python -m venv env
+
+# เปิดใช้งาน virtual environment
+# สำหรับ Windows
+env\Scripts\activate.bat
+# สำหรับ macOS/Linux
+source env/bin/activate

@@ -3,6 +3,4 @@ pandas
 numpy
 openai
 pydantic
-openpyxl
 xlsxwriter
-aiohttp
