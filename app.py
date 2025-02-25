@@ -4,6 +4,7 @@ from Uploadfile.upload import *
 import openai
 from Models.model import SentimentItem, TRUEItem, ADS, SentimentTrue, OutputOptions, Item
 from io import BytesIO
+import asyncio
 
 
 # เรียกใช้งานฟังก์ชัน
@@ -48,28 +49,24 @@ if openai_api_key:
     openai.api_key = openai_api_key
 
     system_prompt = """
+
     PERSONA:
     You're Social Analysis from TRUE Company, a telecom company with multiple partners.
 
     TASKS:
     1. Classify the product of from user quotes.
-    2. Find the sentiment of these user quotes and return the output format for all phase phases one-by-one.
 
     INPUT SOURCE:
     Many phases gathered from news tablets and Facebook pages.
 
-    BASIC CRITERIA FOR SENTIMENT ANALYSIS:
-    - If it's just a commercial ad or commercial phase (e.g., phases with # are likely to be ads), classify it as Neutral.
-    - If the phase benefits, compliments, or shows interest in TRUE Company or TRUE Products, classify it as Positive.
-    - Conversely, if the phase is bad for TRUE Company's reputation, classify it as Negative.
 
     **Classify Section**
     You are an AI model that classifies user quotes into one or more True Corporation services.
     Follow these classification rules with high accuracy and efficiency:
 
     🔹 **Level 1: ตรวจสอบว่ามี "ทรู" หรือ "true" ในข้อความหรือไม่**
-   - **ถ้ามี** → ดำเนินการจำแนกตามหมวดหมู่ด้านล่าง
-   - **ถ้าไม่มี** → ให้ classify เป็น `"Nan"` ทันที
+    - **ถ้ามี** → ดำเนินการจำแนกตามหมวดหมู่ด้านล่าง
+    - **ถ้าไม่มี** → ให้ classify เป็น `"Nan"` ทันที
 
     🔹 **Level 2: ตรวจสอบประเภทผลิตภัณฑ์ (ถ้ามี "ทรู" หรือ "true")**
     1. **True You**: หากพบ **"ร้านเด็ด"**, **"คะแนน"**, **"แต้ม"**, **"จัดแคมเปญ"**.
@@ -93,19 +90,43 @@ if openai_api_key:
 
     🔹 **Special Case: "Nan"**
     - หาก **ไม่มีคำว่า "ทรู" หรือ "true"** → ให้ classify เป็น `"Nan"` ทันที เช่น **"สอบถามเรื่องเก่าแลกใหม่ครับ เงื่อนไข รายละเอียดเป็นอย่างไรครับ"**
+
+    """
+
+    system_prompt_2 = """
+    PERSONA:
+    You're Social Analysis from TRUE Company, a telecom company with multiple partners.
+
+    TO DO: !!MUST ANSWER EVERY PHASE **CANNOT SKIP OR RETURN NONE FOR ANY PHASE**
+    ALWAYS RETURN OUTPUT FOR EVERY PHASE, EVEN IF IT'S UNKNOWN.
+
+    TASKS:
+    1. Find the sentiment of these user quotes and return the output format for all {phase} phases one-by-one.
+
+    INPUT SOURCE:
+    Many phases about TRUE gathered from news tablets and TRUE Facebook pages.
+
+    BASIC CRITERIA FOR SENTIMENT ANALYSIS:
+    - If it's just a commercial ad or commercial phase (e.g., phases with # are likely to be ads), classify it as Neutral.
+    - If the phase benefits, compliments, or shows interest in TRUE Company or TRUE Products, classify it as Positive.
+    - Conversely, if the phase is bad for TRUE Company's reputation, classify it as Negative.
+    - If the phase shows interest such as "สนใจ", classify it as Positive.
+
+    !!IMPORTANT: RETURN OUTPUT FOR EVERY INPUT PHASE. DO NOT OMIT ANY ITEM!!
     """
 
     model = "gpt-4o-mini"
 
     # [ โค้ดจำแนกประเภทของ True ]
 
-    def function_llm(qa_test):
+    async def function_llm(qa_test):
         # แปลงข้อความเดี่ยวเป็นลิสต์
         qa_list = qa_test.strip().split("\n")
         qa_cleaned = [line.split(". ", 1)[1] for line in qa_list if ". " in line]
         classy_final = []  # ลิสต์สำหรับเก็บผลลัพธ์
 
         def classify_text(text):
+            # คำที่บ่งบอกว่าเป็นของ True
             true_keywords = ["ทรู", "true", "ค่ายแดง", "dtac", "ดีแทค", "1242"]
 
             # ถ้าไม่มีคำที่เกี่ยวกับ True เลย → Nan
@@ -125,31 +146,29 @@ if openai_api_key:
             classified_output = classify_text(qa)
 
             if classified_output is None:  # ถ้า keyword หาไม่เจอ ให้ใช้ LLM
-                with st.spinner('กำลังทำการวิเคราะห์...'):
-                    completion = openai.beta.chat.completions.parse(
-                        model=model,
-                        messages=[
-                            {"role": "system", "content": system_prompt.format(phase=len(qa.split("\n")))},
-                            {"role": "user", "content": qa},
-                        ],
-                        response_format=Item,
-                    )
+                completion = openai.beta.chat.completions.parse(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": system_prompt.format(phase=len(qa.split("\n")))},
+                        {"role": "user", "content": qa},
+                    ],
+                    response_format=Item,
+                )
                 classy = completion.choices[0].message.parsed
+
             else:
                 classy = classified_output  # ใช้ค่าที่ได้จาก keyword classify
 
             classy_final.append(classy)
 
-        # เรียก LLM วิเคราะห์ Sentiment (ถ้าต้องใช้)
-        with st.spinner('กำลังทำการวิเคราะห์ Sentiment...'):
-            completion = openai.beta.chat.completions.parse(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt.format(phase=len(qa_test.split("\n")))},
-                    {"role": "user", "content": qa_test},
-                ],
-                response_format=SentimentTrue,
-            )
+        completion = await openai.beta.chat.completions.parse(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt_2.format(phase=len(qa_test.split("\n")))},
+                {"role": "user", "content": qa_test},
+            ],
+            response_format=SentimentTrue,
+        )
         sentiment = completion.choices[0].message.parsed
 
         output = {
@@ -170,9 +189,10 @@ if openai_api_key:
     if st.button('Run Analysis'):
         # เรียกใช้ฟังก์ชัน function_llm เมื่อผู้ใช้กดปุ่ม
         task = [function_llm(ql[i]) for i in range(len(ql))]
+        result = await asyncio.gather(*task)
 
         # วนลูปผ่านข้อมูลแต่ละ event และเก็บผลลัพธ์
-        for event in task:
+        for event in result:
             # ดึงข้อมูลจาก Sentiment
             sentiment_exp.extend([item.explanation for item in event['Sentiment'].Sentiment])
             sentiment_val.extend([item.output for item in event['Sentiment'].Sentiment])
