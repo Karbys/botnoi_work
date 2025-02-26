@@ -6,6 +6,7 @@ from Models.model import SentimentItem, TRUEItem, ADS, SentimentTrue, OutputOpti
 from io import BytesIO
 import asyncio
 import openai
+import random
 
 
 # เรียกใช้งานฟังก์ชัน
@@ -124,57 +125,62 @@ if openai_api_key:
 
     client = AsyncOpenAI(api_key=openai.api_key)
     # เรียกใช้งาน main() โดยใช้ asyncio.run()
+    async def call_llm_with_retry(messages, response_format, max_retries=3):
+        """ เรียก OpenAI API และ retry ถ้าล้มเหลว """
+        retries = 0
+        while retries < max_retries:
+            try:
+                completion = await client.beta.chat.completions.parse(
+                    model=model,
+                    messages=messages,
+                    response_format=response_format,
+                )
+                return completion.choices[0].message.parsed
+            except Exception as e:
+                print(f"Error calling LLM (attempt {retries+1}): {e}")
+                retries += 1
+                await asyncio.sleep(random.uniform(1, 3))  # รอแบบสุ่ม 1-3 วิแล้วลองใหม่
+        return "Error"  # ถ้าล้มเหลวทุกครั้ง ให้คืนค่า Error
+
+
     async def function_llm(qa_test):
-        # แปลงข้อความเดี่ยวเป็นลิสต์
         qa_list = qa_test.strip().split("\n")
         qa_cleaned = [line.split(". ", 1)[1] for line in qa_list if ". " in line]
-        classy_final = []  # ลิสต์สำหรับเก็บผลลัพธ์
+        classy_final = []
 
         def classify_text(text):
-            # คำที่บ่งบอกว่าเป็นของ True
             true_keywords = ["ทรู", "true", "ค่ายแดง", "dtac", "ดีแทค", "1242"]
 
-            # ถ้าไม่มีคำที่เกี่ยวกับ True เลย → Nan
             if not any(word in text.lower() for word in true_keywords):
                 return "Nan"
 
-            # ถ้ามีคำที่เกี่ยวกับ True → ใช้ keywords_dict classify
             for category, keywords in keywords_dict.items():
                 if any(keyword.lower() in text.lower() for keyword in keywords):
                     return category
 
-            return "Nan"  # ถ้าไม่เข้าหมวดหมู่ไหนเลยให้เป็น Nan
+            return "Nan"
 
-
-        # ใช้ keywords_dict และเงื่อนไข "ทรู" ก่อน
+        # Classify ข้อความแต่ละอัน
         for qa in qa_cleaned:
             classified_output = classify_text(qa)
 
-            if classified_output is None:  # ถ้า keyword หาไม่เจอ ให้ใช้ LLM
-                completion = client.beta.chat.completions.parse(
-                    model=model,
-                    messages=[
-                        {"role": "system", "content": system_prompt.format(phase=len(qa.split("\n")))},
-                        {"role": "user", "content": qa},
-                    ],
-                    response_format=Item,
-                )
-                classy = completion.choices[0].message.parsed
-
+            if classified_output == "Nan":
+                messages = [
+                    {"role": "system", "content": system_prompt.format(phase=len(qa.split("\n")))},
+                    {"role": "user", "content": qa},
+                ]
+                classy = await call_llm_with_retry(messages, Item)
             else:
-                classy = classified_output  # ใช้ค่าที่ได้จาก keyword classify
+                classy = classified_output
 
             classy_final.append(classy)
 
-        completion = await client.beta.chat.completions.parse(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt_2.format(phase=len(qa_test.split("\n")))},
-                {"role": "user", "content": qa_test},
-            ],
-            response_format=SentimentTrue,
-        )
-        sentiment = completion.choices[0].message.parsed
+        # เรียก Sentiment Analysis
+        messages = [
+            {"role": "system", "content": system_prompt_2.format(phase=len(qa_test.split("\n")))},
+            {"role": "user", "content": qa_test},
+        ]
+        sentiment = await call_llm_with_retry(messages, SentimentTrue)
 
         output = {
             "Sentiment": sentiment,
@@ -184,15 +190,14 @@ if openai_api_key:
         return output
 
     async def main():
-        batch_size = 10
-        ql = []
         
-        for i in range(0, len(msg), batch_size):
-            info = msg[i:i+batch_size]
-            info = [f"{j+1}. {info[j]}" for j in range(len(info))]
-            ql.append("\n".join(info))
+        batch_size = 10
+        ql = [
+            "\n".join([f"{j+1}. {msg[i+j]}" for j in range(len(msg[i:i+batch_size]))])
+            for i in range(0, len(msg), batch_size)
+        ]
 
-        task = [function_llm(ql[i]) for i in range(len(ql))]
+        task = [function_llm(q) for q in ql]
         result = await asyncio.gather(*task)
         
         return result
