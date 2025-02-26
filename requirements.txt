@@ -4,3 +4,4 @@ numpy
 openai
 pydantic
 xlsxwriter
+openpyxl
