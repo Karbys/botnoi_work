@@ -91,6 +91,8 @@ You're Social Analysis from TRUE Company, a telecom company with multiple partne
 TO DO: !!MUST ANSWER EVERY PHASE **CANNOT SKIP OR RETURN NONE FOR ANY PHASE**
 ALWAYS RETURN OUTPUT FOR EVERY PHASE, EVEN IF IT'S UNKNOWN.
 
+ANSWER SHOULD BE: Negative, Neutral, Positive.
+
 TASKS:
 1. Find the sentiment of these user quotes and return the output format for all {phase} phases one-by-one.
 
@@ -257,13 +259,13 @@ if openai_api_key:
         ADS_val = ADS_val[:min_length]
         classify_val = classify_val[:min_length]
 
-        # st.write(len(sentiment_exp))
-        # st.write(len(sentiment_val))
-        # st.write(len(IS_TRUE_exp))
-        # st.write(len(IS_TRUE_val))
-        # st.write(len(ADS_exp))
-        # st.write(len(ADS_val))
-        # st.write(len(classify_val))
+        st.write(len(sentiment_exp))
+        st.write(len(sentiment_val))
+        st.write(len(IS_TRUE_exp))
+        st.write(len(IS_TRUE_val))
+        st.write(len(ADS_exp))
+        st.write(len(ADS_val))
+        st.write(len(classify_val))
 
         if len(sentiment_exp) == len(sentiment_val) == len(IS_TRUE_exp) == len(IS_TRUE_val) == len(ADS_exp) == len(ADS_val) == len(classify_val):
             # ใช้ st.columns เพื่อแยกพื้นที่ออกเป็นสองคอลัมน์
