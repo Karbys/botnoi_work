@@ -192,7 +192,6 @@ if openai_api_key:
             info = [f"{j+1}. {info[j]}" for j in range(len(info))]
             ql.append("\n".join(info))
 
-        # ใช้ asyncio.gather() ภายใน async function
         task = [function_llm(ql[i]) for i in range(len(ql))]
         result = await asyncio.gather(*task)
         
