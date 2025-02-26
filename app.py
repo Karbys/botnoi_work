@@ -180,11 +180,13 @@ if openai_api_key:
     async def main():
         batch_size = 10
         ql = []
+        
         for i in range(0, len(msg), batch_size):
             info = msg[i:i+batch_size]
             info = [f"{j+1}. {info[j]}" for j in range(len(info))]
             ql.append("\n".join(info))
 
+        # ใช้ asyncio.gather() ภายใน async function
         task = [function_llm(ql[i]) for i in range(len(ql))]
         result = await asyncio.gather(*task)
         
