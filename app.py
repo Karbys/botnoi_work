@@ -1,4 +1,6 @@
 import streamlit as st
+from dotenv import load_dotenv
+import os
 import pandas as pd
 from Uploadfile.upload import *
 from openai import OpenAI, AsyncOpenAI
@@ -8,9 +10,16 @@ import asyncio
 import openai
 import random
 
-
-# เรียกใช้งานฟังก์ชัน
 msg= upload_file()
+# โหลดค่าจาก .env
+load_dotenv()
+openai_api_key = os.getenv("OPENAI_API_KEY")
+
+if not openai_api_key:
+    st.error("API Key is missing. Please check your .env file.")
+# else:
+#     st.success("API Key loaded successfully!")
+
 
 # if msg:
 #     col1 = [row[0] for row in msg]  # ดึงค่า col1 เก็บเป็น list
@@ -18,7 +27,12 @@ msg= upload_file()
 #     col3 = [row[2] for row in msg]
 
 # กำหนด API Key ของคุณ
-openai_api_key = st.text_input("Enter your OpenAI API Key:")  # ใส่ API Key ของคุณตรงนี้
+load_dotenv()
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if not openai_api_key:
+    st.error("API Key is missing. Please check your .env file.")
+# else:
+    # st.success("API Key loaded successfully!")
 
 # เพิ่ม keywords สำหรับแต่ละประเภท
 keywords_dict = {
@@ -134,18 +148,26 @@ if openai_api_key:
         classy_final = []  # ลิสต์สำหรับเก็บผลลัพธ์
 
         def classify_text(text):
+            # คำที่บ่งบอกว่าเป็นของ True
             true_keywords = ["ทรู", "true", "ค่ายแดง", "dtac", "ดีแทค", "1242"]
+
+            # ถ้าไม่มีคำที่เกี่ยวกับ True เลย → Nan
             if not any(word in text.lower() for word in true_keywords):
                 return "Nan"
+
+            # ถ้ามีคำที่เกี่ยวกับ True → ใช้ keywords_dict classify
             for category, keywords in keywords_dict.items():
                 if any(keyword.lower() in text.lower() for keyword in keywords):
                     return category
-            return "Nan"
 
+            return "Nan"  # ถ้าไม่เข้าหมวดหมู่ไหนเลยให้เป็น Nan
+
+
+        # ใช้ keywords_dict และเงื่อนไข "ทรู" ก่อน
         for qa in qa_cleaned:
             classified_output = classify_text(qa)
 
-            if classified_output is None:  
+            if classified_output is None:  # ถ้า keyword หาไม่เจอ ให้ใช้ LLM
                 completion = await client.beta.chat.completions.parse(
                     model=model,
                     messages=[
@@ -155,8 +177,9 @@ if openai_api_key:
                     response_format=Item,
                 )
                 classy = completion.choices[0].message.parsed
+
             else:
-                classy = classified_output
+                classy = classified_output  # ใช้ค่าที่ได้จาก keyword classify
 
             classy_final.append(classy)
 
@@ -180,15 +203,13 @@ if openai_api_key:
     async def main():
         batch_size = 10
         ql = []
-        
         for i in range(0, len(msg), batch_size):
             info = msg[i:i+batch_size]
             info = [f"{j+1}. {info[j]}" for j in range(len(info))]
             ql.append("\n".join(info))
 
-        # ใช้ asyncio.gather() ภายใน async function
-        task = [function_llm(ql[i]) for i in range(len(ql))]
-        result = await asyncio.gather(*task)
+        tasks = [function_llm(ql[i]) for i in range(len(ql))]
+        result = await asyncio.gather(*tasks)
         
         return result
 
