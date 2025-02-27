@@ -15,7 +15,7 @@ msg= upload_file()
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
-# st.write(openai_api_key)
+st.write(openai_api_key)
 
 if not openai_api_key:
     st.error("API Key is missing. Please check your .env file.")
