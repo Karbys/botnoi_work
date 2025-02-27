@@ -10,3 +10,6 @@ python -m venv env
 env\Scripts\activate.bat
 # สำหรับ macOS/Linux
 source env/bin/activate
+
+เปลี่ยนสร้างไฟล์
+.env แล้วสร้าง OPENAI_API_KEY
