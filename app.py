@@ -140,9 +140,6 @@ if openai_api_key:
         with st.spinner("Loading... Please wait"):
             final_result = asyncio.run(main())  # รอผลจาก main()
 
-        # # หลังจากทำงานเสร็จแล้ว จะแสดงผลลัพธ์
-        # st.success("Process completed successfully!")
-
         # เตรียม list สำหรับเก็บข้อมูล
         sentiment_exp = []
         sentiment_val = []
