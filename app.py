@@ -22,8 +22,8 @@ if not openai_api_key:
 else:
     st.success("API Key loaded successfully!")
 
-if msg:
-    col1 = [row[0] for row in msg]  # ดึงค่า col1 เก็บเป็น list
+# if msg:
+#     col1 = [row[0] for row in msg]  # ดึงค่า col1 เก็บเป็น list
 #     col2 = [row[1] for row in msg]  # ดึงค่า col2 เก็บเป็น list
 #     col3 = [row[2] for row in msg]
 
@@ -124,8 +124,8 @@ if openai_api_key:
     async def main():
         batch_size = 1
         ql = []
-        for i in range(0, len(col1), batch_size):
-            info = col1[i:i+batch_size]
+        for i in range(0, len(msg), batch_size):
+            info = msg[i:i+batch_size]
             info = [f"{j+1}. {info[j]}" for j in range(len(info))]
             ql.append(info)
 
@@ -237,7 +237,7 @@ if openai_api_key:
             with col2:
                 st.subheader("Preview:")
                 gpt_4o_mini = pd.DataFrame({
-                    "Message": col1,
+                    "Message": msg,
                     "LLM_Reason": sentiment_exp,
                     "LLM": sentiment_val,
                     "IS_TRUE_explain": IS_TRUE_exp,
