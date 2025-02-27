@@ -122,7 +122,7 @@ if openai_api_key:
         return output
 
     async def main():
-        batch_size = 1
+        batch_size = 10
         ql = []
         for i in range(0, len(msg), batch_size):
             info = msg[i:i+batch_size]
