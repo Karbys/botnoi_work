@@ -65,79 +65,63 @@ if openai_api_key:
     client = AsyncOpenAI(api_key=openai.api_key)
 
     async def function_llm(qa_test):
-        try:
-            # แปลงข้อความเดี่ยวเป็นลิสต์
-            qa_list = qa_test.strip().split("\n")
-            qa_cleaned = [line.split(". ", 1)[1] for line in qa_list if ". " in line]
-            classy_final = []  # ลิสต์สำหรับเก็บผลลัพธ์
+        # แปลงข้อความเดี่ยวเป็นลิสต์
+        qa_list = qa_test.strip().split("\n")
+        qa_cleaned = [line.split(". ", 1)[1] for line in qa_list if ". " in line]
+        classy_final = []  # ลิสต์สำหรับเก็บผลลัพธ์
 
-            def classify_text(text):
-                # คำที่บ่งบอกว่าเป็นของ True
-                true_keywords = ["ทรู", "true", "ค่ายแดง", "dtac", "ดีแทค", "1242"]
+        def classify_text(text):
+            # คำที่บ่งบอกว่าเป็นของ True
+            true_keywords = ["ทรู", "true", "ค่ายแดง", "dtac", "ดีแทค", "1242"]
 
-                # ถ้าไม่มีคำที่เกี่ยวกับ True เลย → Nan
-                if not any(word in text.lower() for word in true_keywords):
-                    return "Nan"
+            # ถ้าไม่มีคำที่เกี่ยวกับ True เลย → Nan
+            if not any(word in text.lower() for word in true_keywords):
+                return "Nan"
 
-                # ถ้ามีคำที่เกี่ยวกับ True → ใช้ keywords_dict classify
-                for category, keywords in keywords_dict.items():
-                    if any(keyword.lower() in text.lower() for keyword in keywords):
-                        return category
+            # ถ้ามีคำที่เกี่ยวกับ True → ใช้ keywords_dict classify
+            for category, keywords in keywords_dict.items():
+                if any(keyword.lower() in text.lower() for keyword in keywords):
+                    return category
 
-                return "Nan"  # ถ้าไม่เข้าหมวดหมู่ไหนเลยให้เป็น Nan
+            return "Nan"  # ถ้าไม่เข้าหมวดหมู่ไหนเลยให้เป็น Nan
 
-            # ใช้ keywords_dict และเงื่อนไข "ทรู" ก่อน
-            for qa in qa_cleaned:
-                try:
-                    classified_output = classify_text(qa)
 
-                    if classified_output is None:  # ถ้า keyword หาไม่เจอ ให้ใช้ LLM
-                        completion = await client.beta.chat.completions.parse(
-                            model=model,
-                            messages=[
-                                {"role": "system", "content": system_prompt.format(phase=len(qa.split("\n")))} ,
-                                {"role": "user", "content": qa},
-                            ],
-                            response_format=Item,
-                        )
-                        classy = completion.choices[0].message.parsed
+        # ใช้ keywords_dict และเงื่อนไข "ทรู" ก่อน
+        for qa in qa_cleaned:
+            classified_output = classify_text(qa)
 
-                    else:
-                        classy = classified_output  # ใช้ค่าที่ได้จาก keyword classify
-
-                    classy_final.append(classy)
-
-                except Exception as e:
-                    print(f"Error in classify_text for QA: {qa}\nError: {e}")
-                    classy_final.append("Error")  # เพิ่มค่า "Error" ในกรณีเกิดข้อผิดพลาด
-
-            # ประมวลผล Sentiment สำหรับทั้งข้อความ
-            try:
+            if classified_output is None:  # ถ้า keyword หาไม่เจอ ให้ใช้ LLM
                 completion = await client.beta.chat.completions.parse(
                     model=model,
                     messages=[
-                        {"role": "system", "content": system_prompt_2.format(phase=len(qa_test.split("\n")))} ,
-                        {"role": "user", "content": qa_test},
+                        {"role": "system", "content": system_prompt.format(phase=len(qa.split("\n")))},
+                        {"role": "user", "content": qa},
                     ],
-                    response_format=SentimentTrue,
+                    response_format=Item,
                 )
-                sentiment = completion.choices[0].message.parsed
+                classy = completion.choices[0].message.parsed
 
-            except Exception as e:
-                print(f"Error in Sentiment analysis: {e}")
-                sentiment = "Error"  # เพิ่มค่า "Error" ในกรณีเกิดข้อผิดพลาด
+            else:
+                classy = classified_output  # ใช้ค่าที่ได้จาก keyword classify
 
-            # ส่งผลลัพธ์
-            output = {
-                "Sentiment": sentiment,
-                "Classify": classy_final
-            }
+            classy_final.append(classy)
 
-            return output
-        
-        except Exception as e:
-            print(f"Error in function_llm: {e}")
-            return {"Error": str(e)} 
+        completion = await client.beta.chat.completions.parse(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt_2.format(phase=len(qa_test.split("\n")))},
+                {"role": "user", "content": qa_test},
+            ],
+            response_format=SentimentTrue,
+        )
+        sentiment = completion.choices[0].message.parsed
+
+        output = {
+            "Sentiment": sentiment,
+            "Classify": classy_final
+        }
+
+        return output
 
     async def main():
         batch_size = 1
@@ -147,7 +131,7 @@ if openai_api_key:
             info = [f"{j+1}. {info[j]}" for j in range(len(info))]
             ql.append("\n".join(info))
 
-        tasks = [function_llm(str(ql[i])) for i in range(len(ql))]
+        tasks = [function_llm(ql[i]) for i in range(len(ql))]
         result = await asyncio.gather(*tasks)
         
         return result
