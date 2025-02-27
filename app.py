@@ -131,7 +131,7 @@ if openai_api_key:
             info = [f"{j+1}. {info[j]}" for j in range(len(info))]
             ql.append("\n".join(info))
 
-        tasks = [function_llm(ql[i]) for i in range(len(ql))]
+        tasks = [function_llm(str(ql[i])) for i in range(len(ql))]
         result = await asyncio.gather(*tasks)
         
         return result
