@@ -124,14 +124,14 @@ if openai_api_key:
         return output
 
     async def main():
-        # batch_size = 10
-        # ql = []
-        # for i in range(0, len(msg), batch_size):
-        #     info = msg[i:i+batch_size]
-        #     info = [f"{j+1}. {info[j]}" for j in range(len(info))]
-        #     ql.append("\n".join(info))
+        batch_size = 10
+        ql = []
+        for i in range(0, len(msg), batch_size):
+            info = msg[i:i+batch_size]
+            info = [f"{j+1}. {info[j]}" for j in range(len(info))]
+            ql.append("\n".join(info))
 
-        tasks = [function_llm(msg)]
+        tasks = [function_llm(ql[i]) for i in range(len(ql))]
         result = await asyncio.gather(*tasks)
         
         return result
