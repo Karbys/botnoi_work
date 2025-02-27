@@ -26,13 +26,6 @@ if not openai_api_key:
 #     col2 = [row[1] for row in msg]  # ดึงค่า col2 เก็บเป็น list
 #     col3 = [row[2] for row in msg]
 
-# กำหนด API Key ของคุณ
-load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
-if not openai_api_key:
-    st.error("API Key is missing. Please check your .env file.")
-# else:
-    # st.success("API Key loaded successfully!")
 
 # เพิ่ม keywords สำหรับแต่ละประเภท
 keywords_dict = {
