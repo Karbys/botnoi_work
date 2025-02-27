@@ -188,13 +188,13 @@ if openai_api_key:
         ADS_val = ADS_val[:min_length]
         classify_val = classify_val[:min_length]
 
-        st.write(len(sentiment_exp))
-        st.write(len(sentiment_val))
-        st.write(len(IS_TRUE_exp))
-        st.write(len(IS_TRUE_val))
-        st.write(len(ADS_exp))
-        st.write(len(ADS_val))
-        st.write(len(classify_val))
+        # st.write(len(sentiment_exp))
+        # st.write(len(sentiment_val))
+        # st.write(len(IS_TRUE_exp))
+        # st.write(len(IS_TRUE_val))
+        # st.write(len(ADS_exp))
+        # st.write(len(ADS_val))
+        # st.write(len(classify_val))
 
         if len(sentiment_exp) == len(sentiment_val) == len(IS_TRUE_exp) == len(IS_TRUE_val) == len(ADS_exp) == len(ADS_val) == len(classify_val):
             # ใช้ st.columns เพื่อแยกพื้นที่ออกเป็นสองคอลัมน์
