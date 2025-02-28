@@ -85,37 +85,37 @@ if openai_api_key:
 
             return "Nan"  # ถ้าไม่เข้าหมวดหมู่ไหนเลยให้เป็น Nan
 
+
         # ใช้ keywords_dict และเงื่อนไข "ทรู" ก่อน
         for qa in qa_cleaned:
-                classified_output = classify_text(qa)
+            classified_output = classify_text(qa)
 
-                if classified_output is None:  # ถ้า keyword หาไม่เจอ ให้ใช้ LLM
-                    completion = await client.beta.chat.completions.parse(
-                        model=model,
-                        messages=[
-                            {"role": "system", "content": system_prompt.format(phase=len(qa.split("\n")))} ,
-                            {"role": "user", "content": qa},
-                        ],
-                        response_format=Item,
-                    )
-                    classy = completion.choices[0].message.parsed
+            if classified_output is None:  # ถ้า keyword หาไม่เจอ ให้ใช้ LLM
+                completion = await client.beta.chat.completions.parse(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": system_prompt.format(phase=len(qa.split("\n")))},
+                        {"role": "user", "content": qa},
+                    ],
+                    response_format=Item,
+                )
+                classy = completion.choices[0].message.parsed
 
-                else:
-                    classy = classified_output  # ใช้ค่าที่ได้จาก keyword classify
+            else:
+                classy = classified_output  # ใช้ค่าที่ได้จาก keyword classify
 
-                classy_final.append(classy)
+            classy_final.append(classy)
 
         completion = await client.beta.chat.completions.parse(
             model=model,
             messages=[
-                {"role": "system", "content": system_prompt_2.format(phase=len(qa_test.split("\n")))} ,
+                {"role": "system", "content": system_prompt_2.format(phase=len(qa_test.split("\n")))},
                 {"role": "user", "content": qa_test},
             ],
             response_format=SentimentTrue,
         )
         sentiment = completion.choices[0].message.parsed
 
-        # ส่งผลลัพธ์
         output = {
             "Sentiment": sentiment,
             "Classify": classy_final
